@@ -1,0 +1,62 @@
+{
+    "expo": {
+        "name": "PetitPrime Wallet",
+        "slug": "petitprime-wallet",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "userInterfaceStyle": "light",
+        "splash": {
+            "resizeMode": "contain",
+            "backgroundColor": "#3B82F6"
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.petitprime.wallet",
+            "infoPlist": {
+                "CFBundleURLTypes": [
+                    {
+                        "CFBundleURLSchemes": [
+                            "petitprime"
+                        ],
+                        "CFBundleURLName": "com.petitprime.wallet"
+                    }
+                ]
+            },
+            "associatedDomains": [
+                "applinks:wallet.petitprime.com"
+            ]
+        },
+        "android": {
+            "adaptiveIcon": {
+                "backgroundColor": "#3B82F6"
+            },
+            "package": "com.petitprime.wallet",
+            "intentFilters": [
+                {
+                    "action": "VIEW",
+                    "autoVerify": true,
+                    "data": [
+                        {
+                            "scheme": "petitprime",
+                            "host": "claim"
+                        },
+                        {
+                            "scheme": "https",
+                            "host": "wallet.petitprime.com",
+                            "pathPrefix": "/claim"
+                        }
+                    ],
+                    "category": [
+                        "BROWSABLE",
+                        "DEFAULT"
+                    ]
+                }
+            ]
+        },
+        "web": {},
+        "scheme": "petitprime"
+    }
+}

@@ -13,7 +13,9 @@ import {
 import * as ClipboardModule from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { claimCard } from '../services/walletService';
+import { trackCardAdded, trackManualAddUsed, trackError } from '../services/analyticsService';
 import { parseDeepLink } from '../utils/deepLinking';
+import { getErrorType } from '../utils/errorHandler';
 import Button from '../components/common/Button';
 import { COLORS, TYPOGRAPHY, SPACING } from '../constants/config';
 
@@ -31,6 +33,9 @@ export default function AddCardManualScreen({ navigation }: AddCardManualScreenP
             return;
         }
 
+        // Trackear uso de agregar manual
+        trackManualAddUsed();
+
         try {
             setLoading(true);
 
@@ -46,7 +51,10 @@ export default function AddCardManualScreen({ navigation }: AddCardManualScreenP
             }
 
             // Reclamar la tarjeta
-            await claimCard(params.token, params.ticketUrl);
+            const cardData = await claimCard(params.token, params.ticketUrl);
+
+            // Trackear tarjeta agregada
+            trackCardAdded(cardData.cardId, 'manual');
 
             Alert.alert(
                 '¡Tarjeta agregada!',
@@ -62,11 +70,27 @@ export default function AddCardManualScreen({ navigation }: AddCardManualScreenP
             );
         } catch (err: any) {
             console.error('Error claiming card:', err);
-            Alert.alert(
-                'Error',
-                err.message || 'No se pudo agregar la tarjeta. El token puede haber expirado o ya haber sido usado.',
-                [{ text: 'Aceptar' }]
-            );
+
+            // Determinar tipo de error
+            const errorType = getErrorType(err);
+
+            // Trackear error
+            trackError(errorType, err.message || 'Error desconocido', 'AddCardManualScreen');
+
+            // Para errores críticos, navegar a pantalla de error
+            if (errorType !== 'unknown') {
+                navigation.navigate('Error', {
+                    type: errorType,
+                    error: err,
+                });
+            } else {
+                // Para errores desconocidos, mostrar alerta simple
+                Alert.alert(
+                    'Error',
+                    err.message || 'No se pudo agregar la tarjeta. Por favor, intenta nuevamente.',
+                    [{ text: 'Aceptar' }]
+                );
+            }
         } finally {
             setLoading(false);
         }

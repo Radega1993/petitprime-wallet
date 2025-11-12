@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../constants/config';
-import { LocalCard } from '../types';
+import { LocalCard, Ticket } from '../types';
 
 /**
  * Guarda una tarjeta localmente
@@ -75,8 +75,13 @@ export async function deleteLocalCard(cardId: string): Promise<void> {
 
 /**
  * Convierte una WalletCard a LocalCard
+ * Preserva el estado de favorito si la tarjeta ya existe localmente
  */
-export function walletCardToLocalCard(walletCard: any): LocalCard {
+export async function walletCardToLocalCard(walletCard: any): Promise<LocalCard> {
+    // Verificar si la tarjeta ya existe localmente para preservar favorite
+    const existingCards = await getLocalCards();
+    const existingCard = existingCards.find(c => c.cardId === walletCard.cardId);
+
     return {
         cardId: walletCard.cardId,
         ticketUrl: walletCard.ticket.url,
@@ -84,6 +89,66 @@ export function walletCardToLocalCard(walletCard: any): LocalCard {
         marca: walletCard.ticket.marca,
         puntos: walletCard.ticket.puntos,
         lastSyncedAt: walletCard.lastSyncedAt || walletCard.addedAt,
+        favorite: existingCard?.favorite || false, // Preservar favorito si existe
+        order: existingCard?.order, // Preservar orden si existe
     };
+}
+
+/**
+ * Marcar/desmarcar tarjeta como favorita
+ */
+export async function toggleFavorite(cardId: string): Promise<boolean> {
+    try {
+        const cards = await getLocalCards();
+        const cardIndex = cards.findIndex(card => card.cardId === cardId);
+
+        if (cardIndex === -1) {
+            throw new Error('Tarjeta no encontrada');
+        }
+
+        const newFavoriteStatus = !cards[cardIndex].favorite;
+        cards[cardIndex].favorite = newFavoriteStatus;
+
+        await AsyncStorage.setItem(STORAGE_KEYS.WALLET_CARDS, JSON.stringify(cards));
+        return newFavoriteStatus;
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        throw error;
+    }
+}
+
+/**
+ * Obtener solo las tarjetas favoritas
+ */
+export async function getFavoriteCards(): Promise<LocalCard[]> {
+    try {
+        const cards = await getLocalCards();
+        return cards.filter(card => card.favorite === true);
+    } catch (error) {
+        console.error('Error getting favorite cards:', error);
+        return [];
+    }
+}
+
+/**
+ * Actualizar orden personalizado de tarjetas
+ */
+export async function updateCardsOrder(cardIds: string[]): Promise<void> {
+    try {
+        const cards = await getLocalCards();
+        const cardMap = new Map(cards.map(card => [card.cardId, card]));
+
+        cardIds.forEach((cardId, index) => {
+            const card = cardMap.get(cardId);
+            if (card) {
+                card.order = index;
+            }
+        });
+
+        await AsyncStorage.setItem(STORAGE_KEYS.WALLET_CARDS, JSON.stringify(cards));
+    } catch (error) {
+        console.error('Error updating cards order:', error);
+        throw error;
+    }
 }
 

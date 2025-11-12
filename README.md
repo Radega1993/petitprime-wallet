@@ -77,7 +77,9 @@ Ver [CONFIG.md](./CONFIG.md) para más detalles.
 - [**CASOS_USO.md**](./CASOS_USO.md) - Casos de uso y flujos de usuario
 - [**CONFIG.md**](./CONFIG.md) - Guía de configuración del backend
 - [**TESTING.md**](./TESTING.md) - Guía de testing y deep links
+- [**ANALYTICS.md**](./ANALYTICS.md) - Guía de analytics y cómo probar las métricas
 - [**ARQUITECTURA.md**](./ARQUITECTURA.md) - Arquitectura del proyecto
+- [**CHANGELOG.md**](./CHANGELOG.md) - Historial de cambios
 
 ## 🏗️ Estructura del Proyecto
 
@@ -189,5 +191,5 @@ Para dudas o problemas:
 
 ---
 
-**Versión**: 1.0.0 (MVP - Fase 1)  
+**Versión**: 1.2.0 (MVP Fase 1 + Mejoras Fase 2 + Fase 3 Parcial)  
 **Última actualización**: 2025-01-16

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     View,
     Text,
@@ -8,11 +8,13 @@ import {
     TouchableOpacity,
     Image,
     Alert,
+    Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { WalletCard } from '../types';
 import { getCardDetail, syncCard, deleteCard } from '../services/walletService';
+import { trackCardViewed, trackCardSynced, trackCardDeleted, trackQRDisplayed } from '../services/analyticsService';
 import QRCode from '../components/cards/QRCode';
 import Button from '../components/common/Button';
 import { COLORS, TYPOGRAPHY, SPACING } from '../constants/config';
@@ -23,8 +25,32 @@ export default function CardDetailScreen({ route, navigation }: any) {
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
 
+    // Animaciones
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(50)).current;
+
+    useEffect(() => {
+        // Animación de entrada
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 400,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
     useEffect(() => {
         loadCard();
+        // Trackear visualización de tarjeta cuando se carga
+        if (cardId) {
+            trackCardViewed(cardId);
+        }
     }, [cardId]);
 
     const loadCard = async () => {
@@ -46,7 +72,16 @@ export default function CardDetailScreen({ route, navigation }: any) {
             setSyncing(true);
             const updatedCard = await syncCard(cardId);
             setCard(updatedCard);
-            Alert.alert('Éxito', 'Tarjeta actualizada correctamente');
+
+            // Trackear sincronización
+            const hasUpdates = updatedCard.ticket.puntos !== card?.ticket.puntos;
+            trackCardSynced(cardId, hasUpdates);
+
+            if (hasUpdates) {
+                Alert.alert('Éxito', 'Tarjeta actualizada correctamente');
+            } else {
+                Alert.alert('Info', 'Tu tarjeta ya está actualizada');
+            }
         } catch (error) {
             Alert.alert('Error', 'No se pudo actualizar la tarjeta');
         } finally {
@@ -66,6 +101,10 @@ export default function CardDetailScreen({ route, navigation }: any) {
                     onPress: async () => {
                         try {
                             await deleteCard(cardId);
+
+                            // Trackear eliminación
+                            trackCardDeleted(cardId);
+
                             Alert.alert('Éxito', 'Tarjeta eliminada');
                             navigation.goBack();
                         } catch (error) {
@@ -96,7 +135,16 @@ export default function CardDetailScreen({ route, navigation }: any) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+            <Animated.ScrollView
+                style={[
+                    styles.scrollView,
+                    {
+                        opacity: fadeAnim,
+                        transform: [{ translateY: slideAnim }],
+                    },
+                ]}
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Card Header */}
                 <LinearGradient
                     colors={[primaryColor, secondaryColor]}
@@ -143,7 +191,13 @@ export default function CardDetailScreen({ route, navigation }: any) {
                 {/* QR Code Section */}
                 <View style={styles.qrSection}>
                     <Text style={styles.sectionTitle}>Código QR</Text>
-                    <View style={styles.qrContainer}>
+                    <View
+                        style={styles.qrContainer}
+                        onLayout={() => {
+                            // Trackear cuando se muestra el QR
+                            trackQRDisplayed(cardId);
+                        }}
+                    >
                         <QRCode value={qrValue} size={250} />
                     </View>
                     <Text style={styles.qrHint}>
@@ -185,7 +239,7 @@ export default function CardDetailScreen({ route, navigation }: any) {
                         style={styles.actionButton}
                     />
                 </View>
-            </ScrollView>
+            </Animated.ScrollView>
         </SafeAreaView>
     );
 }

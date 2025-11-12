@@ -1,16 +1,18 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { WalletCard } from '../../types';
+import { toggleFavorite } from '../../utils/storage';
 import { COLORS, TYPOGRAPHY, SPACING } from '../../constants/config';
 
 interface CardItemProps {
     card: WalletCard;
     onPress: () => void;
+    onFavoriteChange?: (cardId: string, isFavorite: boolean) => void;
 }
 
-export default function CardItem({ card, onPress }: CardItemProps) {
+export default function CardItem({ card, onPress, onFavoriteChange }: CardItemProps) {
     const { ticket } = card;
     const puntos = card.ticket.puntos;
     const { marca } = ticket;
@@ -20,57 +22,200 @@ export default function CardItem({ card, onPress }: CardItemProps) {
     const secondaryColor = marca.coloresCorporativos?.[1] || COLORS.indigo600;
     const logoUrl = marca.logotipo?.cdnUrl || marca.logotipo?.url;
 
+    // Estado de favorito (obtener del storage local)
+    const [isFavorite, setIsFavorite] = useState(false);
+
+    // Animaciones
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const favoriteScaleAnim = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+        // Cargar estado de favorito desde storage local
+        const loadFavoriteStatus = async () => {
+            try {
+                const { getLocalCards } = await import('../../utils/storage');
+                const localCards = await getLocalCards();
+                const localCard = localCards.find(lc => lc.cardId === card.cardId);
+                setIsFavorite(localCard?.favorite || false);
+            } catch (error) {
+                console.error('Error loading favorite status:', error);
+            }
+        };
+        loadFavoriteStatus();
+
+        // Animación de entrada
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                friction: 8,
+                tension: 40,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [card.cardId]);
+
+    const handlePressIn = () => {
+        Animated.spring(scaleAnim, {
+            toValue: 0.97,
+            friction: 3,
+            tension: 40,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const handlePressOut = () => {
+        Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 3,
+            tension: 40,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const handleFavoritePress = async (e: any) => {
+        e.stopPropagation(); // Evitar que se active el onPress del card
+
+        try {
+            const newFavoriteStatus = await toggleFavorite(card.cardId);
+            setIsFavorite(newFavoriteStatus);
+
+            // Animación del botón de favorito
+            Animated.sequence([
+                Animated.spring(favoriteScaleAnim, {
+                    toValue: 1.3,
+                    friction: 3,
+                    tension: 40,
+                    useNativeDriver: true,
+                }),
+                Animated.spring(favoriteScaleAnim, {
+                    toValue: 1,
+                    friction: 3,
+                    tension: 40,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+
+            // Trackear evento
+            const { trackEvent } = await import('../../services/analyticsService');
+            trackEvent(newFavoriteStatus ? 'card_favorited' : 'card_unfavorited', {
+                cardId: card.cardId,
+            });
+
+            // Notificar cambio de favorito al padre
+            if (onFavoriteChange) {
+                onFavoriteChange(card.cardId, newFavoriteStatus);
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        }
+    };
+
     return (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
-            <LinearGradient
-                colors={[primaryColor, secondaryColor]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.card}
+        <Animated.View
+            style={[
+                styles.container,
+                {
+                    opacity: fadeAnim,
+                    transform: [{ scale: scaleAnim }],
+                },
+            ]}
+        >
+            <TouchableOpacity
+                onPress={onPress}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                activeOpacity={1}
             >
-                <View style={styles.header}>
-                    {logoUrl ? (
-                        <Image source={{ uri: logoUrl }} style={styles.logo} />
-                    ) : (
-                        <View style={styles.logoPlaceholder}>
-                            <Ionicons name="storefront" size={24} color={COLORS.white} />
-                        </View>
-                    )}
-                    <View style={styles.headerText}>
-                        <Text style={styles.marcaName} numberOfLines={1}>
-                            {marca.nombre}
-                        </Text>
-                        {marca.eslogan && (
-                            <Text style={styles.eslogan} numberOfLines={1}>
-                                {marca.eslogan}
-                            </Text>
+                <LinearGradient
+                    colors={[primaryColor, secondaryColor]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.card}
+                >
+                    {/* Botón de favorito */}
+                    <TouchableOpacity
+                        onPress={handleFavoritePress}
+                        style={styles.favoriteButton}
+                        activeOpacity={0.8}
+                    >
+                        <Animated.View style={{ transform: [{ scale: favoriteScaleAnim }] }}>
+                            <Ionicons
+                                name={isFavorite ? 'heart' : 'heart-outline'}
+                                size={24}
+                                color={isFavorite ? COLORS.red500 : COLORS.white}
+                                style={styles.favoriteIcon}
+                            />
+                        </Animated.View>
+                    </TouchableOpacity>
+
+                    <View style={styles.header}>
+                        {logoUrl ? (
+                            <Image source={{ uri: logoUrl }} style={styles.logo} />
+                        ) : (
+                            <View style={styles.logoPlaceholder}>
+                                <Ionicons name="storefront" size={24} color={COLORS.white} />
+                            </View>
                         )}
+                        <View style={styles.headerText}>
+                            <Text style={styles.marcaName} numberOfLines={1}>
+                                {marca.nombre}
+                            </Text>
+                            {marca.eslogan && (
+                                <Text style={styles.eslogan} numberOfLines={1}>
+                                    {marca.eslogan}
+                                </Text>
+                            )}
+                        </View>
                     </View>
-                </View>
 
-                <View style={styles.pointsContainer}>
-                    <Text style={styles.pointsLabel}>Puntos</Text>
-                    <Text style={styles.pointsValue}>{puntos || ticket.puntos}</Text>
-                </View>
+                    <View style={styles.pointsContainer}>
+                        <Text style={styles.pointsLabel}>Puntos</Text>
+                        <Text style={styles.pointsValue}>{puntos || ticket.puntos}</Text>
+                    </View>
 
-                <View style={styles.footer}>
-                    <Text style={styles.clientName}>
-                        {ticket.cliente.nombre} {ticket.cliente.apellido}
-                    </Text>
-                    <Ionicons name="chevron-forward" size={20} color={COLORS.white} />
-                </View>
-            </LinearGradient>
-        </TouchableOpacity>
+                    <View style={styles.footer}>
+                        <Text style={styles.clientName}>
+                            {ticket.cliente.nombre} {ticket.cliente.apellido}
+                        </Text>
+                        <Ionicons name="chevron-forward" size={20} color={COLORS.white} />
+                    </View>
+                </LinearGradient>
+            </TouchableOpacity>
+        </Animated.View>
     );
 }
 
 const styles = StyleSheet.create({
+    container: {
+        marginBottom: SPACING.md,
+    },
     card: {
         borderRadius: 16,
         padding: SPACING.lg,
-        marginBottom: SPACING.md,
         minHeight: 180,
         justifyContent: 'space-between',
+        position: 'relative',
+    },
+    favoriteButton: {
+        position: 'absolute',
+        top: SPACING.md,
+        right: SPACING.md,
+        zIndex: 10,
+        padding: SPACING.xs,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    },
+    favoriteIcon: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
     },
     header: {
         flexDirection: 'row',

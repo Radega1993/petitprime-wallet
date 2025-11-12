@@ -104,11 +104,13 @@ export interface WalletCard {
 
 export interface LocalCard {
     cardId: string;
-    ticketUrl: string;
+    ticketUrl?: string;
     ticketData: Ticket;
-    marca: Marca;
+    marca?: Marca;
     puntos: number;
     lastSyncedAt: string;
+    favorite?: boolean;
+    order?: number;
 }
 
 export interface ClaimCardRequest {

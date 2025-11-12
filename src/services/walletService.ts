@@ -35,20 +35,28 @@ export async function claimCard(token: string, ticketUrl?: string): Promise<Clai
 
         if (!response.ok) {
             let errorMessage = 'Error al reclamar tarjeta';
+            let errorData: any = {};
+
             try {
-                const error = await response.json();
-                errorMessage = error.message || error.error || errorMessage;
+                errorData = await response.json();
+                errorMessage = errorData.message || errorData.error || errorMessage;
             } catch (e) {
                 // Si no se puede parsear el error, usar el status text
                 errorMessage = response.statusText || `Error ${response.status}`;
             }
-            throw new Error(errorMessage);
+
+            // Crear error con información adicional
+            const error = new Error(errorMessage);
+            (error as any).status = response.status;
+            (error as any).statusText = response.statusText;
+            (error as any).data = errorData;
+            throw error;
         }
 
         const data: ClaimCardResponse = await response.json();
 
         // Guardar tarjeta localmente
-        const localCard = walletCardToLocalCard(data.data);
+        const localCard = await walletCardToLocalCard(data.data);
         await saveCardLocally(localCard);
 
         return data.data;
@@ -81,7 +89,7 @@ export async function getWalletCards(): Promise<WalletCard[]> {
 
         // Actualizar caché local
         for (const card of data.data.cards) {
-            const localCard = walletCardToLocalCard(card);
+            const localCard = await walletCardToLocalCard(card);
             await saveCardLocally(localCard);
         }
 
@@ -120,7 +128,7 @@ export async function getCardDetail(cardId: string): Promise<WalletCard> {
         const data: GetCardResponse = await response.json();
 
         // Actualizar tarjeta local
-        const localCard = walletCardToLocalCard(data.data);
+        const localCard = await walletCardToLocalCard(data.data);
         await saveCardLocally(localCard);
 
         return data.data;

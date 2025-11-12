@@ -1,61 +1,74 @@
 # Funcionalidades Pendientes - PetitPrime Wallet
 
-## 🚧 Fase 2: MVP Mejorado
+## ✅ Completadas (Fase 2 - MVP Mejorado)
 
-### Prioridad Alta
+### 1. ✅ Pantalla de Error Mejorada
+- [x] Crear componente ErrorDisplay para mostrar errores de forma consistente
+- [x] Crear pantalla ErrorScreen dedicada para diferentes tipos de errores
+- [x] Mejorar manejo de errores en AddCardScreen con navegación a ErrorScreen
+- [x] Agregar sugerencias de solución según el tipo de error
+- [ ] Implementar opción para reenviar token (si el backend lo soporta) - **Pendiente**
 
-#### 1. Pantalla de Error Mejorada
-- [ ] Pantalla dedicada para errores de token caducado
-- [ ] Mensajes de error más descriptivos
-- [ ] Opción para reenviar token
-- [ ] Guía de solución de problemas
+### 2. ✅ Animaciones y Transiciones
+- [x] Agregar animaciones de transición entre pantallas
+- [x] Agregar animación al agregar tarjeta (fade in + scale)
+- [x] Agregar animación al eliminar tarjeta (fade out)
+- [x] Mejorar animación de carga con skeleton loaders
+- [x] Agregar feedback visual en botones (press animation)
 
-#### 2. Animaciones y Transiciones
-- [ ] Animaciones al agregar tarjeta
-- [ ] Transiciones suaves entre pantallas
-- [ ] Animación de carga mejorada
-- [ ] Feedback visual en interacciones
+### 3. ✅ Métricas Básicas
+- [x] Implementar tracking de eventos básicos (app opened, card added, etc.)
+- [ ] Integrar con servicio de analytics (Firebase Analytics o similar) - **Pendiente para producción**
+- [ ] Agregar dashboard básico de métricas (opcional) - **Pendiente**
 
-#### 3. Métricas Básicas
-- [ ] Tracking de tarjetas agregadas
-- [ ] Tracking de aperturas de app
-- [ ] Tracking de uso de QR codes
-- [ ] Dashboard básico de métricas (opcional)
+## ✅ Completadas (Fase 3 - Multi-Tarjeta y Personalización)
 
-### Prioridad Media
+### 1. ✅ Búsqueda y Filtros
+- [x] Búsqueda de tarjetas por nombre de comercio, cliente y eslogan
+- [x] Filtros por comercio (modal con lista)
+- [x] Ordenamiento de tarjetas (por nombre A-Z/Z-A, por puntos mayor/menor)
+- [x] UI de filtros activos con opción de limpiar
+- [ ] Vista de tarjetas en grid (opcional) - **Pendiente**
 
-#### 4. Mejoras de UX
-- [ ] Búsqueda de tarjetas
-- [ ] Filtros (por comercio, por puntos, etc.)
-- [ ] Ordenamiento de tarjetas
-- [ ] Vista de tarjetas en grid (opcional)
+### 2. ✅ Favoritos
+- [x] Botón de favorito en cada tarjeta
+- [x] Almacenamiento persistente de favoritos
+- [x] Filtro para mostrar solo favoritos
+- [x] Integración con búsqueda y otros filtros
+- [x] Tracking de eventos de favoritos
 
-#### 5. Notificaciones
+### 3. ✅ Vista Carrusel
+- [x] Componente CarouselView con scroll horizontal
+- [x] Indicadores de página
+- [x] Contador de tarjetas
+- [x] Toggle entre vista lista y carrusel
+- [x] Compatibilidad con favoritos y filtros
+
+## 🔴 Prioridad Alta (Fase 3 - Pendiente)
+
+### 4. Notificaciones
 - [ ] Notificaciones push de nuevos puntos
 - [ ] Notificaciones de premios disponibles
 - [ ] Notificaciones de ofertas especiales
 - [ ] Configuración de notificaciones
+
+### 5. Personalización Avanzada
+- [ ] Orden personalizado de tarjetas (drag & drop)
+- [ ] Agrupación por comercio
 
 ## 🎯 Fase 3: Experiencia Completa
 
 ### 1. Múltiples Tarjetas Avanzado
 - [ ] Vista carrusel de tarjetas
 - [ ] Vista de lista mejorada
-- [ ] Agrupación por comercio
 - [ ] Búsqueda avanzada
 
-### 2. Personalización
-- [ ] Colores y logos personalizados por comercio (ya parcialmente implementado)
-- [ ] Temas personalizados
-- [ ] Orden personalizado de tarjetas
-- [ ] Favoritos
-
-### 3. Actualización Silenciosa
+### 2. Actualización Silenciosa
 - [ ] Background sync
 - [ ] Notificaciones push de actualizaciones
 - [ ] Sincronización inteligente (solo cuando hay cambios)
 
-### 4. Diseño de Tarjeta Animada
+### 3. Diseño de Tarjeta Animada
 - [ ] Animación tipo Apple Wallet
 - [ ] Efectos visuales avanzados
 - [ ] Interacciones táctiles mejoradas
@@ -101,7 +114,7 @@
 
 ### 3. Monitoreo Avanzado
 - [ ] Crashlytics
-- [ ] Analytics detallado
+- [ ] Analytics detallado (Firebase Analytics)
 - [ ] Performance monitoring
 - [ ] Error tracking
 
@@ -153,9 +166,9 @@
 ## 🎨 Mejoras de Diseño
 
 ### 1. Assets
-- [ ] Iconos de la app
-- [ ] Splash screen
-- [ ] Adaptive icons
+- [x] Iconos de la app (icon.png)
+- [x] Splash screen (splash.png)
+- [x] Adaptive icons
 - [ ] Favicon para web
 
 ### 2. Temas
@@ -163,17 +176,12 @@
 - [ ] Temas personalizados
 - [ ] Ajustes de accesibilidad
 
-### 3. Animaciones
-- [ ] Micro-interacciones
-- [ ] Transiciones de página
-- [ ] Feedback háptico
-- [ ] Animaciones de carga
-
 ## 📊 Analytics y Métricas
 
-### 1. Eventos
-- [ ] Eventos de usuario
-- [ ] Eventos de negocio
+### 1. Eventos (Implementado - Pendiente integración producción)
+- [x] Eventos de usuario
+- [x] Eventos de negocio
+- [ ] Integración con Firebase Analytics
 - [ ] Funnels de conversión
 - [ ] Cohortes
 
@@ -205,9 +213,9 @@
 - [ ] Videos de ayuda
 
 ### 2. Desarrollador
-- [ ] Documentación de API
+- [x] Documentación de API (en README)
 - [ ] Guía de contribución
-- [ ] Arquitectura detallada
+- [x] Arquitectura detallada (ARQUITECTURA.md)
 - [ ] Decisiones de diseño
 
 ## 🚀 Deployment
@@ -229,4 +237,3 @@
 **Nota**: Esta lista se actualiza continuamente según las prioridades del proyecto.
 
 **Última actualización**: 2025-01-16
-

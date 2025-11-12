@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
     TouchableOpacity,
     Text,
@@ -6,6 +6,7 @@ import {
     ActivityIndicator,
     ViewStyle,
     TextStyle,
+    Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, TYPOGRAPHY } from '../../constants/config';
@@ -32,6 +33,29 @@ export default function Button({
     children,
 }: ButtonProps) {
     const isGradient = variant === 'primary';
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    const handlePressIn = () => {
+        if (!disabled && !loading) {
+            Animated.spring(scaleAnim, {
+                toValue: 0.95,
+                friction: 3,
+                tension: 40,
+                useNativeDriver: true,
+            }).start();
+        }
+    };
+
+    const handlePressOut = () => {
+        if (!disabled && !loading) {
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                friction: 3,
+                tension: 40,
+                useNativeDriver: true,
+            }).start();
+        }
+    };
 
     const buttonContent = (
         <>
@@ -47,38 +71,55 @@ export default function Button({
 
     if (isGradient && !disabled) {
         return (
-            <TouchableOpacity
-                onPress={onPress}
-                disabled={disabled || loading}
-                style={[styles.container, style]}
-                activeOpacity={0.8}
+            <Animated.View
+                style={[
+                    styles.container,
+                    style,
+                    { transform: [{ scale: scaleAnim }] },
+                ]}
             >
-                <LinearGradient
-                    colors={[COLORS.blue600, COLORS.indigo600]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.gradient}
+                <TouchableOpacity
+                    onPress={onPress}
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOut}
+                    disabled={disabled || loading}
+                    activeOpacity={1}
                 >
-                    {buttonContent}
-                </LinearGradient>
-            </TouchableOpacity>
+                    <LinearGradient
+                        colors={[COLORS.blue600, COLORS.indigo600]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.gradient}
+                    >
+                        {buttonContent}
+                    </LinearGradient>
+                </TouchableOpacity>
+            </Animated.View>
         );
     }
 
     return (
-        <TouchableOpacity
-            onPress={onPress}
-            disabled={disabled || loading}
+        <Animated.View
             style={[
-                styles.container,
-                styles[variant],
-                disabled && styles.disabled,
-                style,
+                { transform: [{ scale: scaleAnim }] },
             ]}
-            activeOpacity={0.7}
         >
-            {buttonContent}
-        </TouchableOpacity>
+            <TouchableOpacity
+                onPress={onPress}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                disabled={disabled || loading}
+                style={[
+                    styles.container,
+                    styles[variant],
+                    disabled && styles.disabled,
+                    style,
+                ]}
+                activeOpacity={0.7}
+            >
+                {buttonContent}
+            </TouchableOpacity>
+        </Animated.View>
     );
 }
 
